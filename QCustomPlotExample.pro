@@ -13,9 +13,18 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    qcustomplot.cpp
+    measurement.cpp \
+    qcustomplot.cpp \
+    signalparams.cpp \
+    uisetter.cpp
 
 HEADERS += mainwindow.h \
-    qcustomplot.h
+    qcustomplot.h \
+    signalparams.h
 
 FORMS  += mainwindow.ui
+
+LIBS   += -lfftw3
+
+OTHER_FILES += \
+    params.ini
