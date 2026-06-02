@@ -26,6 +26,8 @@ private:
     static inline const QString PARAMS = "Params";
     static inline const double PI = acos(-1.0);
 
+    QVector<QVector<double>> generateSignal(std::function<double()> gen);
+
 public:
     static constexpr int GENERATING_MODE_RANDOM = 0;
     static constexpr int GENERATING_MODE_TOGGLE = 1;
@@ -55,5 +57,5 @@ public:
     void recalcSTFT();
     void sanitize(QWidget *window);
 
-    QVector<QVector<double>> generateFSKSignal();
+    QVector<QVector<double>> generateFSKToggleSignal();
 };

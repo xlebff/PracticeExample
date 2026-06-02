@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
      * after adding other signals, must be updated to "initSignal" or sth */
     params.loadFromSettings();
     params.sanitize(this);
-    signal = params.generateFSKSignal();
+    signal = params.generateFSKToggleSignal();
 
     /* init chart */
     drawChart[0]();
@@ -50,20 +50,29 @@ void MainWindow::drawRI()
 
     QVector<double> x(N), re(N), im(N);
 
+    double arg = 2 * PI * f / fd;
+
     for (int i = 0; i < N; ++i) {
         int X = n1 + i;
         x[i] = X;
-        re[i] = A * (cos(2 * PI * f * X / fd));
-        im[i] = A * (sin(2 * PI * f * X / fd));
+        re[i] = A * (cos(arg * X));
+        im[i] = A * (sin(arg * X));
     }
 
+
+    /* DRAWING */
+
+    /*
     double tempMinY, tempMaxY;
     minMax(tempMinY, tempMaxY, re, N);
     minMax(minY, maxY, im, N);
     if (tempMinY < minY) minY = tempMinY;
     if (tempMaxY > maxY) maxY = tempMaxY;
+    */
+
+    minMax(minY, maxY, im, N);
     minX = n1;
-    maxX = n2;
+    maxX = n2 * MARGIN;
 
     m_plot->xAxis->setRange(minX, maxX);
     m_plot->yAxis->setRange(minY, maxY);
@@ -121,9 +130,9 @@ void MainWindow::drawFFTSpectrum()
 
     /* getting values for our chart
      * and annulate Im part to see both positive and negative picks */
+    double arg = 2 * PI * f / fd;
     for (int i = 0; i < N_fft; ++i) {
-        double arg = 2 * PI * f * (i + n1) / fd;
-        in_fftw[i][0] = A * (cos(arg));
+        in_fftw[i][0] = A * (cos(arg * (i + n1)));
         in_fftw[i][1] = 0.0;
     }
 
@@ -157,7 +166,7 @@ void MainWindow::drawFFTSpectrum()
     clearPlot();
 
     minX = -fd / 2;
-    maxX = fd / 2;
+    maxX = fd / 2 * MARGIN;
 
     minMax(minY, maxY, out_fftw_graf, N_fft);
 
@@ -189,12 +198,14 @@ void MainWindow::drawSTFT()
 
     QVector<QVector<double>> magnitudeSpectrogram(windowsQuantity);
 
+    double arg = (2 * PI) / (windowSize - 1);
+
     for (int frame = 0; frame < windowsQuantity; ++frame) {
         int start = frame * hopSize;
         for (int j = 0; j < windowSize; ++j) {
             double I = signal[0][start + j];
             double Q = signal[1][start + j];
-            double hann = 0.5 * (1.0 - cos((2.0 * PI * j) / (windowSize - 1)));
+            double hann = 0.5 * (1.0 - cos(arg * j));
             in_fftw[j][0] = I * hann;
             in_fftw[j][1] = Q * hann;
         }
@@ -216,14 +227,15 @@ void MainWindow::drawSTFT()
     fftw_free(in_fftw);
     fftw_free(out_fftw);
 
+
     /* DRAWING */
 
     clearPlot();
 
     minX = 0;
-    maxX = windowsQuantity - 1;
+    maxX = (windowsQuantity - 1) * MARGIN;
     minY = 0;
-    maxY = windowSize - 1;
+    maxY = (windowSize - 1) * MARGIN;
 
     colorMap = new QCPColorMap(m_plot->xAxis, m_plot->yAxis);
 
@@ -270,6 +282,7 @@ void MainWindow::drawIQPlane()
         qData[i] = signal[1][i];
     }
 
+
     /* DRAWING */
 
     clearPlot();
@@ -277,9 +290,9 @@ void MainWindow::drawIQPlane()
     QRect screenRect = MainWindow::window()->geometry();
     float coef = (float)screenRect.width() / (float)screenRect.height();
 
-    minX = -A * MARGIN * coef;
+    minX = -A * coef;
     maxX = A * MARGIN * coef;
-    minY = -A * MARGIN;
+    minY = -A;
     maxY = A * MARGIN;
 
     m_plot->addGraph();
@@ -325,33 +338,34 @@ void MainWindow::drawPhase()
     for (int i = 1; i < N; ++i) {
         double diff = phase[i] - phase[i-1];
         /* if the leap is greater than PI switching the branch */
-        if (diff > M_PI)       cumulativeShift -= 2.0 * M_PI;
-        else if (diff < -M_PI) cumulativeShift += 2.0 * M_PI;
+        if (diff > PI) cumulativeShift -= 2.0 * PI;
+        else if (diff < -PI) cumulativeShift += 2.0 * PI;
         unwrappedPhase[i] = phase[i] + cumulativeShift;
     }
+
 
     /* DRAWING */
 
     clearPlot();
 
+    /* it`s easy with X: min and max values are determiend by Time */
     minMax(minX, maxX, time, N);
-    minMax(minY, maxY, envelope, N);
 
-    /* if there is no A-modulation, all envelope values will be the same
-     * but there is floating numbers! so it`s just veery-very close to each other,
-     * and i didn`t think up anything better than this */
-    if (minY > maxY - 10) {
-        minY = 0;
-    }
+    /* but for min-max Y values we have two charts,
+     * so calculating both and comparing */
+    double phaseMinY, phaseMaxY;
+    double envelopeMinY, envelopeMaxY;
+
+    minMax(phaseMinY, phaseMaxY, unwrappedPhase, N);
+    minMax(envelopeMinY, envelopeMaxY, envelope, N);
+
+    minY = phaseMinY < envelopeMinY ? phaseMinY : envelopeMinY;
+    maxY = phaseMaxY > envelopeMaxY ? phaseMaxY : envelopeMaxY;
 
     /* additional right axis */
     rightAxis = m_plot->axisRect()->addAxis(QCPAxis::atRight);
     rightAxis->setLabel("Phase (rad)");
-
-    double minPhase = *std::min_element(unwrappedPhase.constBegin(), unwrappedPhase.constEnd());
-    double maxPhase = *std::max_element(unwrappedPhase.constBegin(), unwrappedPhase.constEnd());
-    double margin = (maxPhase - minPhase) * 0.05 + 0.5;
-    rightAxis->setRange(minPhase - margin, maxPhase + margin);
+    rightAxis->setRange(phaseMinY, phaseMaxY);
 
     m_plot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignTop|Qt::AlignRight);
 
@@ -380,7 +394,76 @@ void MainWindow::drawPhase()
 }
 
 void MainWindow::drawACF()
-{}
+{
+    /* using expression to get 2N - 1 for Wiener-Kinchin`s theorem */
+    double N = params.N;
+    int argN = N * 2 - 1;
+
+    /* finding the closest power of 2 */
+    int N_fft = 1;
+    while (N_fft < argN) N_fft <<= 1;
+
+    fftw_complex *in  = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*N_fft);
+    fftw_complex *out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*N_fft);
+    fftw_complex *acf_fft = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*N_fft);
+
+    /* filling the existing part with real values */
+    for (int i = 0; i < N_fft; ++i) {
+        in[i][0] = signal[0][i];
+        in[i][1] = signal[1][i];
+    }
+    /* filling the rest part with zero */
+    for (int i = N; i < N_fft; ++i) {
+        in[i][0] = 0.0;
+        in[i][1] = 0.0;
+    }
+
+    fftw_plan p_fwd = fftw_plan_dft_1d(N_fft, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(p_fwd);
+
+    for (int i = 0; i < N_fft; ++i) {
+        double re = out[i][0], im = out[i][1];
+        out[i][0] = re*re + im*im;
+        out[i][1] = 0.0;
+    }
+
+    fftw_plan p_inv = fftw_plan_dft_1d(N_fft, out, acf_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_execute(p_inv);
+
+    /* linear ACF (lag 0..N-1) */
+    int maxLag = N / 4 + 1;
+    QVector<double> lags(maxLag), acfMagnitude(maxLag);
+    for (int k = 0; k < maxLag; ++k) {
+        // acf_fft[k] – это R[k] с точностью до масштаба
+        double realPart = acf_fft[k][0] / N_fft; // нормировка (для FFTW обратное БПФ делится на N)
+        double imagPart = acf_fft[k][1] / N_fft;
+        acfMagnitude[k] = std::sqrt(realPart*realPart + imagPart*imagPart);
+        lags[k] = k;
+    }
+
+    /* cleaning up! */
+    fftw_destroy_plan(p_inv);
+    fftw_destroy_plan(p_fwd);
+    fftw_free(in);
+    fftw_free(out);
+    fftw_free(acf_fft);
+
+
+    /* DRAWING */
+
+    clearPlot();
+
+    minMax(minX, maxX, lags, maxLag);
+    minMax(minY, maxY, acfMagnitude, maxLag);
+
+    m_plot->addGraph();
+    m_plot->graph(0)->setData(lags, acfMagnitude);
+
+    m_plot->xAxis->setRange(minX, maxX);
+    m_plot->yAxis->setRange(minY, maxY);
+
+    m_plot->replot();
+}
 
 void MainWindow::drawPDF()
 {}
@@ -428,5 +511,4 @@ void MainWindow::minMax(double &min, double &max, const QVector<double> &array, 
         max = array[i] > max ? array[i] : max;
     }
     max *= MARGIN;
-    min *= MARGIN;
 }

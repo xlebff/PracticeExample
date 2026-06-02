@@ -42,8 +42,6 @@ void MainWindow::initCombo()
                                         std::function<void()>([this]() { drawSTFT(); }),
                                         std::function<void()>([this]() { drawIQPlane(); }),
                                         std::function<void()>([this]() { drawPhase(); }),
-                                        std::function<void()>([this]() { drawPhase(); }),
-                                        std::function<void()>([this]() { drawACF(); }),
                                         std::function<void()>([this]() { drawACF(); }),
                                         std::function<void()>([this]() { drawPDF(); }) } )
     {
