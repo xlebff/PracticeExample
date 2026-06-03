@@ -21,7 +21,7 @@ void SignalParams::loadFromSettings(const QString &path)
     df = sett.value("df", DF_DEFAULT).toInt();
     rate = sett.value("rate", RATE_DEFAULT).toInt();
     window = sett.value("window", WINDOW_DEFAULT).toInt();
-    bitGenerateMode = sett.value("mode", GENERATING_MODE_DEFAULT).toInt();
+    //bitGenerateMode = sett.value("mode", GENERATING_MODE_DEFAULT).toInt();
     sett.endGroup();
 }
 
@@ -76,14 +76,15 @@ QVector<QVector<double>> SignalParams::generateClearSignal() {
     return signal;
 }
 
-QVector<QVector<double>> SignalParams::generateFSKToggleSignal() {
+QVector<QVector<double>> SignalParams::generateFSKSignal(const bool isRandom, QVector<short> &infBit) {
     QVector<short> inf_bit(N);
     QVector<QVector<double>> signal(2, QVector<double>(N, 0));
 
     inf_bit[0] = 0;
     for (int i = 1; i < N; ++i) {
         if (i % samplesPerSymbol == 0) {
-            inf_bit[i] = inf_bit[i - 1] ^ 1;
+            if (!isRandom) inf_bit[i] = inf_bit[i - 1] ^ 1;
+            else inf_bit[i] = rand() % 2;
         } else {
             inf_bit[i] = inf_bit[i - 1];
         }
@@ -102,46 +103,19 @@ QVector<QVector<double>> SignalParams::generateFSKToggleSignal() {
         signal[1][i] = im;
     }
 
+    infBit = inf_bit;
     return signal;
 }
 
-QVector<QVector<double>> SignalParams::generateFSKRandomSignal() {
+QVector<QVector<double>> SignalParams::generatePhaseSignal(const bool isRandom, QVector<short> &infBit) {
     QVector<short> inf_bit(N);
     QVector<QVector<double>> signal(2, QVector<double>(N, 0));
 
     inf_bit[0] = 0;
     for (int i = 1; i < N; ++i) {
         if (i % samplesPerSymbol == 0) {
-            inf_bit[i] = rand() % 2;
-        } else {
-            inf_bit[i] = inf_bit[i - 1];
-        }
-    }
-
-    double arg = 2 * PI / fd;
-    for (int i = 0; i < N; ++i) {
-        double freq = inf_bit[i] == 0 ?
-                          f - df :
-                          f + df;
-
-        double re = A * cos(arg * freq * (i + n1));
-        double im = A * sin(arg * freq * (i + n1));
-
-        signal[0][i] = re;
-        signal[1][i] = im;
-    }
-
-    return signal;
-}
-
-QVector<QVector<double>> SignalParams::generatePhaseToggleSignal() {
-    QVector<short> inf_bit(N);
-    QVector<QVector<double>> signal(2, QVector<double>(N, 0));
-
-    inf_bit[0] = 0;
-    for (int i = 1; i < N; ++i) {
-        if (i % samplesPerSymbol == 0) {
-            inf_bit[i] = (inf_bit[i - 1] + 1) % 8;
+            if (!isRandom) inf_bit[i] = (inf_bit[i - 1] + 1) % 8;
+            else inf_bit[i] = rand() % 8;
         } else {
             inf_bit[i] = inf_bit[i - 1];
         }
@@ -155,41 +129,19 @@ QVector<QVector<double>> SignalParams::generatePhaseToggleSignal() {
         signal[1][i] = im;
     }
 
+    infBit = inf_bit;
     return signal;
 }
 
-QVector<QVector<double>> SignalParams::generatePhaseRandomSignal() {
+QVector<QVector<double>> SignalParams::generateASignal(const bool isRandom, QVector<short> &infBit) {
     QVector<short> inf_bit(N);
     QVector<QVector<double>> signal(2, QVector<double>(N, 0));
 
     inf_bit[0] = 0;
     for (int i = 1; i < N; ++i) {
         if (i % samplesPerSymbol == 0) {
-            inf_bit[i] = rand() % 8;
-        } else {
-            inf_bit[i] = inf_bit[i - 1];
-        }
-    }
-
-    for (int i = 0; i < N; ++i) {
-        double re = A * cos(PHASES[inf_bit[i] % PHASES_COUNT]);
-        double im = A * sin(PHASES[inf_bit[i] % PHASES_COUNT]);
-
-        signal[0][i] = re;
-        signal[1][i] = im;
-    }
-
-    return signal;
-}
-
-QVector<QVector<double>> SignalParams::generateAToggleSignal() {
-    QVector<short> inf_bit(N);
-    QVector<QVector<double>> signal(2, QVector<double>(N, 0));
-
-    inf_bit[0] = 0;
-    for (int i = 1; i < N; ++i) {
-        if (i % samplesPerSymbol == 0) {
-            inf_bit[i] = inf_bit[i - 1] ^ 1;
+            if (!isRandom) inf_bit[i] = inf_bit[i - 1] ^ 1;
+            else inf_bit[i] = rand() % 2;
         } else {
             inf_bit[i] = inf_bit[i - 1];
         }
@@ -204,30 +156,6 @@ QVector<QVector<double>> SignalParams::generateAToggleSignal() {
         signal[1][i] = im;
     }
 
-    return signal;
-}
-
-QVector<QVector<double>> SignalParams::generateARandomSignal() {
-    QVector<short> inf_bit(N);
-    QVector<QVector<double>> signal(2, QVector<double>(N, 0));
-
-    inf_bit[0] = 0;
-    for (int i = 1; i < N; ++i) {
-        if (i % samplesPerSymbol == 0) {
-            inf_bit[i] = rand() % 2;
-        } else {
-            inf_bit[i] = inf_bit[i - 1];
-        }
-    }
-
-    double arg = 2 * PI * f / fd;
-    for (int i = 0; i < N; ++i) {
-        double re = inf_bit[i] * A * cos(arg * (i + n1));
-        double im = inf_bit[i] * A * sin(arg * (i + n1));
-
-        signal[0][i] = re;
-        signal[1][i] = im;
-    }
-
+    infBit = inf_bit;
     return signal;
 }

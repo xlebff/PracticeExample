@@ -24,7 +24,9 @@ private slots:
     void onMouseRelease(QMouseEvent *event);
 
     /* slot for switching current chart */
-    void onComboSwitched(int index);
+    void onChartComboSwitched(int index);
+    void onSignalComboSwitched(int index);
+    void onModeComboSwitched(int index);
 
 private:
     /* VITAL */
@@ -33,6 +35,7 @@ private:
 
     SignalParams params;
     QVector<QVector<double>> signal;
+    QVector<short> infBit;
 
     static inline const double PI = acos(-1.0);
 
@@ -47,10 +50,9 @@ private:
     QCustomPlot *m_plot = nullptr;
 
     /* combo box for switching between charts */
-    QComboBox *m_PlotComboBox;
+    QComboBox *m_ChartComboBox;
     /* vector for do it without huge switch-case */
     std::vector<std::function<void()>> drawChart;
-
     /* all charts i have now */
     static constexpr int CHARTS_QUANTITY = 7;
     const char* CHARTS_NAMES[CHARTS_QUANTITY] = { "Real and Imaginary Parts",
@@ -59,7 +61,37 @@ private:
                                                   "Phase Portrait",
                                                   "Envelope and Instantaneous Phase",
                                                   "Autocorrelation Function",
-                                                  "Amplitude Distribution Histogram" };
+                                                  "Wrapped phase"
+                                                  /* "Information bit" */
+                                                  /* "Amplitude Distribution Histogram" */ };
+    int currentChart = 0;
+
+    /* combo box for different signal modulations:
+     * freq (toggle/random),
+     * phase (toggle/random),
+     * amplitude (toggle/random) */
+    QComboBox *m_SignalComboBox;
+    // std::vector<std::function<void(const bool)>> generateSignal;
+    static constexpr int SIGNALS_QUANTITY = 3;
+    const char* SIGNALS_NAMES[SIGNALS_QUANTITY] = { "Amplitude modulation",
+                                                    "Frequency modulation",
+                                                    "Phase modulation" };
+    /* indexes contst */
+    static constexpr int A_MODULATION = 0;
+    static constexpr int FSK_MODULATION = 1;
+    static constexpr int PHASE_MODULATION = 2;
+    int currentSignal = 0;
+    //std::vector<std::function<QVector<QVector<double>>(const bool)>> generateSignal;
+
+    /* combo box for generating mode */
+    QComboBox *m_ModeComboBox;
+    static constexpr int MODES_QUANTITY = 2;
+    const char* MODES_NAMES[MODES_QUANTITY] = { "Toggle",
+                                                "Random" };
+    /* indexes contst */
+    static constexpr int TOGGLE_MODE = 0;
+    static constexpr int RANDOM_MODE = 1;
+    int mode = 0;
 
 
     /* METHODS */
@@ -70,7 +102,7 @@ private:
 
     /* as like previous,
      * this method must be called on start to init combo box */
-    void initCombo();
+    void initComboBoxes();
 
 
 
@@ -100,7 +132,7 @@ private:
     void drawIQPlane();
     void drawPhase();
     void drawACF();
-    void drawPDF();
+    void drawWrappedPhase();
 
     /* helpers */
     void clearPlot();

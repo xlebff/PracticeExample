@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     initLinesAndText();
 
     /* ui control */
-    initCombo();
+    initComboBoxes();
 
     /* working with params:
      * loading settings,
@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
      * after adding other signals, must be updated to "initSignal" or sth */
     params.loadFromSettings();
     params.sanitize(this);
-    signal = params.generateFSKToggleSignal();
+    signal = params.generateASignal(mode, infBit);
 
     /* init chart */
     drawChart[0]();
@@ -69,6 +69,8 @@ void MainWindow::drawRI()
     if (tempMinY < minY) minY = tempMinY;
     if (tempMaxY > maxY) maxY = tempMaxY;
     */
+
+    clearPlot();
 
     minMax(minY, maxY, im, N);
     minX = n1;
@@ -465,12 +467,116 @@ void MainWindow::drawACF()
     m_plot->replot();
 }
 
-void MainWindow::drawPDF()
-{}
-
-void MainWindow::onComboSwitched(int index)
+ void MainWindow::drawWrappedPhase()
 {
-    drawChart[index](); /* simple! */
+    const int N = params.N;
+    const int fd = params.fd;
+
+    QVector<double> time(N), phase(N);
+
+    for (int i = 0; i < N; ++i) {
+        time[i] = (double)i / (double)fd;
+    }
+
+    /* calculating envelope and phase */
+    for (int i = 0; i < N; ++i) {
+        double I = signal[0][i];
+        double Q = signal[1][i];
+        phase[i] = std::atan2(Q, I); /* [-PI, PI] */
+    }
+
+
+    /* DRAWING */
+
+    clearPlot();
+
+    minMax(minX, maxX, time, N);
+    minMax(minY, maxY, phase, N);
+
+    m_plot->addGraph();
+    m_plot->graph(0)->setData(time, phase);
+    m_plot->graph(0)->setPen(QPen(Qt::red));
+    m_plot->xAxis->setLabel("Time (s)");
+    m_plot->yAxis->setLabel("Phase (rad)");
+
+    m_plot->xAxis->setRange(minX, maxX);
+    m_plot->yAxis->setRange(minY, maxY);
+
+    m_plot->replot();
+
+    /*
+    const int N = params.N;
+
+    QVector<double> X(N), Y(N);
+
+    for (int i = 0; i < N; ++i) {
+        Y[i] = infBit[i];
+        X[i] = i;
+    }
+
+    /* DRAWING
+
+    clearPlot();
+
+    minY = infBit[0]; maxY = infBit[0];
+    for (int i = 1; i < N; ++i) {
+        minY = infBit[i] < minY ? infBit[i] : minY;
+        maxY = infBit[i] > maxY ? infBit[i] : maxY;
+    }
+    minY /= MARGIN;
+    maxY *= MARGIN;
+
+    minX = 0;
+    maxX = N * MARGIN;
+
+    m_plot->addGraph();
+    m_plot->graph(0)->setData(X, Y);
+
+    m_plot->xAxis->setRange(minX, maxX);
+    m_plot->yAxis->setRange(minY, maxY);
+
+    m_plot->replot();
+    */
+}
+
+void MainWindow::onChartComboSwitched(int index)
+{
+    currentChart = index;
+    drawChart[currentChart](); /* simple! */
+}
+
+void MainWindow::onSignalComboSwitched(int index)
+{
+    currentSignal = index;
+
+    switch (currentSignal)
+    {
+    case A_MODULATION:
+        signal = params.generateASignal(mode, infBit);
+        break;
+    case FSK_MODULATION:
+        signal = params.generateFSKSignal(mode, infBit);
+        break;
+    case PHASE_MODULATION:
+        signal = params.generatePhaseSignal(mode, infBit);
+        break;
+    default:
+        signal = params.generateClearSignal();
+        for (int i = 0; i < infBit.capacity(); ++i)
+            infBit[i] = 0;
+        break;
+    }
+
+    //signal = generateSignal[currentChart](mode);
+    onChartComboSwitched(currentChart);
+}
+
+void MainWindow::onModeComboSwitched(int index)
+{
+    mode = index;
+    //signal = generateSignal[currentChart](mode);
+    onSignalComboSwitched(currentSignal);
+    //onChartComboSwitched(currentChart);
 }
 
 void MainWindow::clearPlot()

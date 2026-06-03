@@ -20,7 +20,7 @@ private:
     static constexpr int HOP_COEF = 2;
     static constexpr int WINDOWS_QUANTITY_DEFAULT = 0;
 
-    static constexpr int GENERATING_MODE_DEFAULT = 0;
+    // static constexpr int GENERATING_MODE_DEFAULT = 0;
 
     static inline const QString PATH = "params.ini";
     static inline const QString PARAMS = "Params";
@@ -47,7 +47,7 @@ public:
     int hop = HOP_DEFAULT;
     int windowsQuantity = WINDOWS_QUANTITY_DEFAULT;
 
-    int bitGenerateMode = GENERATING_MODE_DEFAULT;
+    // int bitGenerateMode = GENERATING_MODE_DEFAULT;
     int N = 0;
     int samplesPerSymbol = 0;
 
@@ -57,5 +57,8 @@ public:
     void recalcSTFT();
     void sanitize(QWidget *window);
 
-    QVector<QVector<double>> generateFSKToggleSignal();
+    QVector<QVector<double>> generateClearSignal();
+    QVector<QVector<double>> generateFSKSignal(const bool isRandom, QVector<short> &infBit);
+    QVector<QVector<double>> generatePhaseSignal(const bool isRandom, QVector<short> &infBit);
+    QVector<QVector<double>> generateASignal(const bool isRandom, QVector<short> &infBit);
 };

@@ -1,5 +1,24 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "signalparams.h"
+
+QComboBox *initCombo(const char *names[],
+                     const int size)
+{
+    QComboBox *combo = new QComboBox();
+
+    /* filling combo box with options according to info from .h */
+    QStandardItemModel *model = new QStandardItemModel(combo);
+    for (int i = 0; i < size; ++i) {
+        QStandardItem *item = new QStandardItem(QString(names[i]));
+        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        model->appendRow(item);
+    }
+
+    combo->setModel(model);
+
+    return combo;
+}
 
 void MainWindow::initPlot()
 {
@@ -20,22 +39,9 @@ void MainWindow::initPlot()
     connect(m_plot, &QCustomPlot::mouseRelease, this, &MainWindow::onMouseRelease);
 }
 
-void MainWindow::initCombo()
+void MainWindow::initComboBoxes()
 {
-    m_PlotComboBox = new QComboBox();
-
-    /* filling combo box with options according ro info from .h */
-    QStandardItemModel *model = new QStandardItemModel(m_PlotComboBox);
-    for (int i = 0; i < CHARTS_QUANTITY; ++i) {
-        QStandardItem *item = new QStandardItem(QString(CHARTS_NAMES[i]));
-        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-        model->appendRow(item);
-    }
-
-    m_PlotComboBox->setModel(model);
-
-    ui->gridLayout->addWidget(m_PlotComboBox);
-
+    m_ChartComboBox = initCombo(CHARTS_NAMES, CHARTS_QUANTITY);
     /* adding methods to the vector for quick switching between charts */
     for (std::function<void()> item : { std::function<void()>([this]() { drawRI(); }),
                                         std::function<void()>([this]() { drawFFTSpectrum(); }),
@@ -43,12 +49,45 @@ void MainWindow::initCombo()
                                         std::function<void()>([this]() { drawIQPlane(); }),
                                         std::function<void()>([this]() { drawPhase(); }),
                                         std::function<void()>([this]() { drawACF(); }),
-                                        std::function<void()>([this]() { drawPDF(); }) } )
+                                        std::function<void()>([this]() { drawWrappedPhase(); }) } )
     {
         drawChart.push_back(item);
     }
 
     /* connecting combo box */
-    connect(m_PlotComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MainWindow::onComboSwitched);
+    connect(m_ChartComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onChartComboSwitched);
+
+
+    m_SignalComboBox = initCombo(SIGNALS_NAMES, SIGNALS_QUANTITY);
+    /*generateSignal.push_back({
+        [this](const bool) -> QVector<QVector<double>> {
+            return params.generateASignal(mode);
+        }
+    });
+    generateSignal.push_back({
+        [this](const bool) -> QVector<QVector<double>> {
+            return params.generateFSKSignal(mode);
+        }
+    });
+    generateSignal.push_back({
+        [this](const bool) -> QVector<QVector<double>> {
+            return params.generatePhaseSignal(mode);
+        }
+    });*/
+
+    /* connecting combo box */
+    connect(m_SignalComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onSignalComboSwitched);
+
+
+    m_ModeComboBox = initCombo(MODES_NAMES, MODES_QUANTITY);
+    /* connecting combo box */
+    connect(m_ModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onModeComboSwitched);
+
+
+    ui->gridLayout->addWidget(m_ChartComboBox);
+    ui->gridLayout->addWidget(m_SignalComboBox);
+    ui->gridLayout->addWidget(m_ModeComboBox);
 }
