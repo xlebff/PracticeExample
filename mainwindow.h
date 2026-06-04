@@ -28,6 +28,9 @@ private slots:
     void onSignalComboSwitched(int index);
     void onModeComboSwitched(int index);
 
+    /* slot for file writing */
+    void writeFile();
+
 private:
     /* VITAL */
 
@@ -103,6 +106,8 @@ private:
     /* as like previous,
      * this method must be called on start to init combo box */
     void initComboBoxes();
+
+    void initButton();
 
 
 
@@ -201,4 +206,18 @@ private:
     /* just simple helpers */
     void hideDragVisuals();
     void showDragVisuals();
+
+
+
+    /* FILES */
+
+
+    /* VARIABLES */
+
+    const char *CARRIER_MODE_RESULT_FILE_PATH = "resultcarrier.dat";
+    const char *AMPLITUDE_MODE_RESULT_FILE_PATH = "resultamplitude.dat";
+    const char *FREQUENCY_MODE_RESULT_FILE_PATH = "resultfsk.dat";
+    const char *PHASE_MODE_RESULT_FILE_PATH = "result8psk.dat";
+
+    QPushButton *m_WriteFileButton;
 };

@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     /* ui control */
     initComboBoxes();
+    initButton();
 
     /* working with params:
      * loading settings,
@@ -603,6 +604,49 @@ void MainWindow::clearPlot()
         rightAxis->setVisible(false);
         rightAxis = nullptr;
     }
+}
+
+void MainWindow::writeFile()
+{
+    const int N = params.N;
+    short result[2];
+
+    const char *fileName;
+    switch (currentSignal)
+    {
+    case A_MODULATION:
+        fileName = AMPLITUDE_MODE_RESULT_FILE_PATH;
+        break;
+    case FSK_MODULATION:
+        fileName = FREQUENCY_MODE_RESULT_FILE_PATH;
+        break;
+    case PHASE_MODULATION:
+        fileName = PHASE_MODE_RESULT_FILE_PATH;
+        break;
+    default:
+        fileName = CARRIER_MODE_RESULT_FILE_PATH;
+        break;
+    }
+
+    FILE* f = fopen(fileName, "w+b");
+    if (!f) {
+        QMessageBox::critical(this, "Error", "Error during opening result file");
+        qDebug() << "Error during opening " << fileName << Qt::endl;
+        return;
+    }
+
+    for (int i = 0; i < N; ++i) {
+        result[0] = static_cast<short>(signal[0][i]);
+        result[1] = static_cast<short>(signal[1][i]);
+
+        size_t written = fwrite(result, sizeof(short), 2, f);
+        if (written != 2) {
+            QMessageBox::warning(this, "Warning", "Error during writting in phase mode");
+            qDebug() << "Error during writting in phase mode" << Qt::endl;
+        }
+    }
+
+    fclose(f);
 }
 
 

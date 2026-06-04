@@ -91,3 +91,10 @@ void MainWindow::initComboBoxes()
     ui->gridLayout->addWidget(m_SignalComboBox);
     ui->gridLayout->addWidget(m_ModeComboBox);
 }
+
+void MainWindow::initButton()
+{
+    m_WriteFileButton = new QPushButton("Write", this);
+    ui->gridLayout->addWidget(m_WriteFileButton);
+    connect(m_WriteFileButton, SIGNAL(clicked()), this, SLOT(writeFile()));
+}
