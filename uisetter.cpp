@@ -44,12 +44,12 @@ void MainWindow::initComboBoxes()
     m_ChartComboBox = initCombo(CHARTS_NAMES, CHARTS_QUANTITY);
     /* adding methods to the vector for quick switching between charts */
     for (std::function<void()> item : { std::function<void()>([this]() { drawRI(); }),
-                                        std::function<void()>([this]() { drawFFTSpectrum(); }),
-                                        std::function<void()>([this]() { drawSTFT(); }),
-                                        std::function<void()>([this]() { drawIQPlane(); }),
-                                        std::function<void()>([this]() { drawPhase(); }),
-                                        std::function<void()>([this]() { drawACF(); }),
-                                        std::function<void()>([this]() { drawWrappedPhase(); }) } )
+                                       std::function<void()>([this]() { drawFFTSpectrum(); }),
+                                       std::function<void()>([this]() { drawSTFT(); }),
+                                       std::function<void()>([this]() { drawIQPlane(); }),
+                                       std::function<void()>([this]() { drawPhase(); }),
+                                       std::function<void()>([this]() { drawACF(); }),
+                                       std::function<void()>([this]() { drawWrappedPhase(); }) } )
     {
         drawChart.push_back(item);
     }
@@ -58,47 +58,30 @@ void MainWindow::initComboBoxes()
     connect(m_ChartComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onChartComboSwitched);
 
-
     m_SignalComboBox = initCombo(SIGNALS_NAMES, SIGNALS_QUANTITY);
-    /*generateSignal.push_back({
-        [this](const bool) -> QVector<QVector<double>> {
-            return params.generateASignal(mode);
-        }
-    });
-    generateSignal.push_back({
-        [this](const bool) -> QVector<QVector<double>> {
-            return params.generateFSKSignal(mode);
-        }
-    });
-    generateSignal.push_back({
-        [this](const bool) -> QVector<QVector<double>> {
-            return params.generatePhaseSignal(mode);
-        }
-    });*/
-
-    /* connecting combo box */
     connect(m_SignalComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onSignalComboSwitched);
 
-
     m_ModeComboBox = initCombo(MODES_NAMES, MODES_QUANTITY);
-    /* connecting combo box */
     connect(m_ModeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onModeComboSwitched);
 
+    m_WriteFileButton = new QPushButton("Write", this);
+    connect(m_WriteFileButton, SIGNAL(clicked()), this, SLOT(writeFile()));
 
-    ui->gridLayout->addWidget(m_ChartComboBox);
-    ui->gridLayout->addWidget(m_SignalComboBox);
-    ui->gridLayout->addWidget(m_ModeComboBox);
+    m_ReloadButton = new QPushButton("Reload", this);
+    connect(m_ReloadButton, SIGNAL(clicked()), this, SLOT(onReloadButtonClicked()));
+
+    QHBoxLayout *controlLayout = new QHBoxLayout();
+    controlLayout->addWidget(m_ChartComboBox);
+    controlLayout->addWidget(m_SignalComboBox);
+    controlLayout->addWidget(m_ModeComboBox);
+    controlLayout->addWidget(m_WriteFileButton);
+    controlLayout->addWidget(m_ReloadButton);
+
+    ui->gridLayout->addLayout(controlLayout, 2, 0, 1, 1);
 }
 
 void MainWindow::initButton()
 {
-    m_WriteFileButton = new QPushButton("Write", this);
-    ui->gridLayout->addWidget(m_WriteFileButton);
-    connect(m_WriteFileButton, SIGNAL(clicked()), this, SLOT(writeFile()));
-
-    m_ReloadButton = new QPushButton("Reload", this);
-    ui->gridLayout->addWidget(m_ReloadButton);
-    connect(m_ReloadButton, SIGNAL(clicked()), this, SLOT(onReloadButtonClicked()));
 }
