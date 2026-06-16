@@ -31,6 +31,9 @@ private slots:
     /* slot for file writing */
     void writeFile();
 
+    /* slot for reloading a graph */
+    void onReloadButtonClicked();
+
 private:
     /* VITAL */
 
@@ -220,4 +223,6 @@ private:
     const char *PHASE_MODE_RESULT_FILE_PATH = "result8psk.dat";
 
     QPushButton *m_WriteFileButton;
+
+    QPushButton *m_ReloadButton;   /* new - reload button */
 };

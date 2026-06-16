@@ -3,6 +3,7 @@
 #include <QString>
 #include <QWidget>
 #include <cmath>
+#include <functional>
 
 struct SignalParams {
 private:

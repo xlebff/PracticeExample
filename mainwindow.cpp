@@ -136,7 +136,7 @@ void MainWindow::drawFFTSpectrum()
     double arg = 2 * PI * f / fd;
     for (int i = 0; i < N_fft; ++i) {
         in_fftw[i][0] = A * (cos(arg * (i + n1)));
-        in_fftw[i][1] = 0.0;
+        in_fftw[i][1] = A * (sin(arg * (i + n1)));
     }
 
     /* creating plan and checking if it`s ok */
@@ -285,28 +285,45 @@ void MainWindow::drawIQPlane()
         qData[i] = signal[1][i];
     }
 
-
-    /* DRAWING */
+    double firstI = signal[0][0];
+    double firstQ = signal[1][0];
 
     clearPlot();
 
-    QRect screenRect = MainWindow::window()->geometry();
+    QRect screenRect = geometry();
     float coef = (float)screenRect.width() / (float)screenRect.height();
 
-    minX = -A * coef;
+    minX = -A * MARGIN * coef;
     maxX = A * MARGIN * coef;
-    minY = -A;
+    minY = -A * MARGIN;
     maxY = A * MARGIN;
 
     m_plot->addGraph();
-
     m_plot->graph(0)->setData(iData, qData);
-
     m_plot->graph(0)->setLineStyle(QCPGraph::lsNone);
     m_plot->graph(0)->setScatterStyle(QCPScatterStyle(
         QCPScatterStyle::ssCircle, QColor("blue"), 6));
 
     m_plot->graph(0)->rescaleAxes();
+
+    QCPItemLine *phaseVector = new QCPItemLine(m_plot);
+    phaseVector->setProperty("tempItem", true);
+    phaseVector->start->setCoords(0, 0);
+    phaseVector->end->setCoords(firstI, firstQ);
+    phaseVector->setHead(QCPLineEnding::esSpikeArrow);
+    phaseVector->setPen(QPen(Qt::red, 2));
+
+    double angleRad = std::atan2(firstQ, firstI);
+    double angleDeg = angleRad * 180.0 / PI;
+
+    QCPItemText *angleText = new QCPItemText(m_plot);
+    angleText->setProperty("tempItem", true);
+    angleText->position->setCoords(0, 0);
+    angleText->position->setCoords(firstI * 0.7, firstQ * 0.7);
+    angleText->setText(QString("%1°").arg(angleDeg, 0, 'f', 1));
+    angleText->setColor(Qt::red);
+    angleText->setFont(QFont(font().family(), 11, QFont::Bold));
+
     m_plot->xAxis->setLabel("I (синфазная)");
     m_plot->yAxis->setLabel("Q (квадратурная)");
     m_plot->xAxis->setRange(minX, maxX);
@@ -468,7 +485,7 @@ void MainWindow::drawACF()
     m_plot->replot();
 }
 
- void MainWindow::drawWrappedPhase()
+void MainWindow::drawWrappedPhase()
 {
     const int N = params.N;
     const int fd = params.fd;
@@ -479,65 +496,53 @@ void MainWindow::drawACF()
         time[i] = (double)i / (double)fd;
     }
 
-    /* calculating envelope and phase */
     for (int i = 0; i < N; ++i) {
         double I = signal[0][i];
         double Q = signal[1][i];
-        phase[i] = std::atan2(Q, I); /* [-PI, PI] */
+        phase[i] = std::atan2(Q, I);
     }
 
-
-    /* DRAWING */
+    QVector<double> X(N), Y(N);
+    for (int i = 0; i < N; ++i) {
+        Y[i] = infBit[i];
+        X[i] = i;
+    }
 
     clearPlot();
 
     minMax(minX, maxX, time, N);
     minMax(minY, maxY, phase, N);
 
+    double infoMinY = infBit[0], infoMaxY = infBit[0];
+    for (int i = 1; i < N; ++i) {
+        infoMinY = infBit[i] < infoMinY ? infBit[i] : infoMinY;
+        infoMaxY = infBit[i] > infoMaxY ? infBit[i] : infoMaxY;
+    }
+    infoMinY /= MARGIN;
+    infoMaxY *= MARGIN;
+
+    if (infoMinY < minY) minY = infoMinY;
+    if (infoMaxY > maxY) maxY = infoMaxY;
+
     m_plot->addGraph();
     m_plot->graph(0)->setData(time, phase);
     m_plot->graph(0)->setPen(QPen(Qt::red));
-    m_plot->xAxis->setLabel("Time (s)");
-    m_plot->yAxis->setLabel("Phase (rad)");
-
-    m_plot->xAxis->setRange(minX, maxX);
-    m_plot->yAxis->setRange(minY, maxY);
-
-    m_plot->replot();
-
-    /*
-    const int N = params.N;
-
-    QVector<double> X(N), Y(N);
-
-    for (int i = 0; i < N; ++i) {
-        Y[i] = infBit[i];
-        X[i] = i;
-    }
-
-    /* DRAWING
-
-    clearPlot();
-
-    minY = infBit[0]; maxY = infBit[0];
-    for (int i = 1; i < N; ++i) {
-        minY = infBit[i] < minY ? infBit[i] : minY;
-        maxY = infBit[i] > maxY ? infBit[i] : maxY;
-    }
-    minY /= MARGIN;
-    maxY *= MARGIN;
-
-    minX = 0;
-    maxX = N * MARGIN;
+    m_plot->graph(0)->setName("Phase");
 
     m_plot->addGraph();
-    m_plot->graph(0)->setData(X, Y);
+    m_plot->graph(1)->setData(X, Y);
+    m_plot->graph(1)->setPen(QPen(Qt::green));
+    m_plot->graph(1)->setName("Info bits");
+
+    m_plot->xAxis->setLabel("Time (s)");
+    m_plot->yAxis->setLabel("Phase (rad) / Bits");
 
     m_plot->xAxis->setRange(minX, maxX);
     m_plot->yAxis->setRange(minY, maxY);
 
+    m_plot->legend->setVisible(true);
+
     m_plot->replot();
-    */
 }
 
 void MainWindow::onChartComboSwitched(int index)
@@ -587,8 +592,13 @@ void MainWindow::clearPlot()
     m_plot->clearPlottables();
     m_plot->clearGraphs();
 
-    /* if there was gradient,
-     * clearing it and updating layout */
+    for (int i = m_plot->itemCount() - 1; i >= 0; --i) {
+        QCPAbstractItem *item = m_plot->item(i);
+        if (item->property("tempItem").toBool()) {
+            m_plot->removeItem(item);
+        }
+    }
+
     if (colorScale) {
         m_plot->plotLayout()->remove(colorScale);
         colorScale = nullptr;
@@ -599,7 +609,6 @@ void MainWindow::clearPlot()
         m_plot->plotLayout()->updateLayout();
     }
 
-    /* if there was additional right axis */
     if (rightAxis) {
         rightAxis->setVisible(false);
         rightAxis = nullptr;
@@ -661,4 +670,14 @@ void MainWindow::minMax(double &min, double &max, const QVector<double> &array, 
         max = array[i] > max ? array[i] : max;
     }
     max *= MARGIN;
+}
+
+/* re-reading 'params.ini' after clicking 'Reload' */
+
+void MainWindow::onReloadButtonClicked()
+{
+    params.loadFromSettings();
+    params.sanitize(this);
+    signal = params.generateASignal(mode, infBit);
+    onSignalComboSwitched(currentSignal);
 }

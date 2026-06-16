@@ -97,4 +97,8 @@ void MainWindow::initButton()
     m_WriteFileButton = new QPushButton("Write", this);
     ui->gridLayout->addWidget(m_WriteFileButton);
     connect(m_WriteFileButton, SIGNAL(clicked()), this, SLOT(writeFile()));
+
+    m_ReloadButton = new QPushButton("Reload", this);
+    ui->gridLayout->addWidget(m_ReloadButton);
+    connect(m_ReloadButton, SIGNAL(clicked()), this, SLOT(onReloadButtonClicked()));
 }
