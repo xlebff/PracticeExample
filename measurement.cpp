@@ -11,8 +11,8 @@ void MainWindow::initLinesAndText()
 
     /* setting it up */
     for (QCPItemLine *line : { m_startVertLine, m_startHorizLine,
-                               m_currentVertLine, m_currentHorizLine,
-                               m_diagonalLine}) {
+                              m_currentVertLine, m_currentHorizLine,
+                              m_diagonalLine}) {
         m_plot->addItem(line);
         line->setPen(QPen(Qt::gray));
         /* invisible by default */
@@ -33,6 +33,8 @@ void MainWindow::initLinesAndText()
     /* text for positions */
     m_startText = new QCPItemText(m_plot);
     m_deltaText = new QCPItemText(m_plot);
+    m_plot->addItem(m_startText);
+    m_plot->addItem(m_deltaText);
     m_startText->setPositionAlignment(Qt::AlignLeft);
     m_deltaText->setPositionAlignment(Qt::AlignLeft);
     /* invisible by default */

@@ -416,7 +416,7 @@ void MainWindow::drawPhase()
 void MainWindow::drawACF()
 {
     /* using expression to get 2N - 1 for Wiener-Kinchin`s theorem */
-    double N = params.N;
+    const int N = params.N;
     int argN = N * 2 - 1;
 
     /* finding the closest power of 2 */
@@ -428,7 +428,7 @@ void MainWindow::drawACF()
     fftw_complex *acf_fft = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*N_fft);
 
     /* filling the existing part with real values */
-    for (int i = 0; i < N_fft; ++i) {
+    for (int i = 0; i < N; ++i) {
         in[i][0] = signal[0][i];
         in[i][1] = signal[1][i];
     }
@@ -454,8 +454,7 @@ void MainWindow::drawACF()
     int maxLag = N / 4 + 1;
     QVector<double> lags(maxLag), acfMagnitude(maxLag);
     for (int k = 0; k < maxLag; ++k) {
-        // acf_fft[k] – это R[k] с точностью до масштаба
-        double realPart = acf_fft[k][0] / N_fft; // нормировка (для FFTW обратное БПФ делится на N)
+        double realPart = acf_fft[k][0] / N_fft;
         double imagPart = acf_fft[k][1] / N_fft;
         acfMagnitude[k] = std::sqrt(realPart*realPart + imagPart*imagPart);
         lags[k] = k;
@@ -504,7 +503,7 @@ void MainWindow::drawWrappedPhase()
 
     QVector<double> X(N), Y(N);
     for (int i = 0; i < N; ++i) {
-        Y[i] = infBit[i];
+        Y[i] = (i < infBit.size()) ? infBit[i] : 0;
         X[i] = i;
     }
 
@@ -513,10 +512,14 @@ void MainWindow::drawWrappedPhase()
     minMax(minX, maxX, time, N);
     minMax(minY, maxY, phase, N);
 
-    double infoMinY = infBit[0], infoMaxY = infBit[0];
-    for (int i = 1; i < N; ++i) {
-        infoMinY = infBit[i] < infoMinY ? infBit[i] : infoMinY;
-        infoMaxY = infBit[i] > infoMaxY ? infBit[i] : infoMaxY;
+    double infoMinY = 0, infoMaxY = 1;
+    if (infBit.size() > 0) {
+        infoMinY = infBit[0];
+        infoMaxY = infBit[0];
+        for (int i = 1; i < infBit.size(); ++i) {
+            infoMinY = infBit[i] < infoMinY ? infBit[i] : infoMinY;
+            infoMaxY = infBit[i] > infoMaxY ? infBit[i] : infoMaxY;
+        }
     }
     infoMinY /= MARGIN;
     infoMaxY *= MARGIN;
