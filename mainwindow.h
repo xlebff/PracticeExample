@@ -26,7 +26,6 @@ private slots:
     /* slot for switching current chart */
     void onChartComboSwitched(int index);
     void onSignalComboSwitched(int index);
-    void onModeComboSwitched(int index);
 
     /* slot for file writing */
     void writeFile();
@@ -60,16 +59,11 @@ private:
     /* vector for do it without huge switch-case */
     std::vector<std::function<void()>> drawChart;
     /* all charts i have now */
-    static constexpr int CHARTS_QUANTITY = 7;
+    static constexpr int CHARTS_QUANTITY = 4;
     const char* CHARTS_NAMES[CHARTS_QUANTITY] = { "Real and Imaginary Parts",
                                                   "FFT Spectrum",
-                                                  "Spectrogram",
                                                   "Phase Portrait",
-                                                  "Envelope and Instantaneous Phase",
-                                                  "Autocorrelation Function",
-                                                  "Wrapped phase"
-                                                  /* "Information bit" */
-                                                  /* "Amplitude Distribution Histogram" */ };
+                                                  "Information bit" };
     int currentChart = 0;
 
     /* combo box for different signal modulations:
@@ -77,7 +71,6 @@ private:
      * phase (toggle/random),
      * amplitude (toggle/random) */
     QComboBox *m_SignalComboBox;
-    // std::vector<std::function<void(const bool)>> generateSignal;
     static constexpr int SIGNALS_QUANTITY = 3;
     const char* SIGNALS_NAMES[SIGNALS_QUANTITY] = { "Amplitude modulation",
                                                     "Frequency modulation",
@@ -87,16 +80,7 @@ private:
     static constexpr int FSK_MODULATION = 1;
     static constexpr int PHASE_MODULATION = 2;
     int currentSignal = 0;
-    //std::vector<std::function<QVector<QVector<double>>(const bool)>> generateSignal;
 
-    /* combo box for generating mode */
-    QComboBox *m_ModeComboBox;
-    static constexpr int MODES_QUANTITY = 2;
-    const char* MODES_NAMES[MODES_QUANTITY] = { "Toggle",
-                                                "Random" };
-    /* indexes contst */
-    static constexpr int TOGGLE_MODE = 0;
-    static constexpr int RANDOM_MODE = 1;
     int mode = 0;
 
 
@@ -122,25 +106,16 @@ private:
     /* Y-margin to see the highest points of the chart */
     static constexpr double MARGIN = 1.01;
 
-    /* gradient for spectrum */
-    QCPColorScale *colorScale = nullptr;
-    QCPColorMap *colorMap = nullptr;
-    QCPColorGradient gradient;
-
-    /* additional right axis */
-    QCPAxis *rightAxis = nullptr;
-
+    QCPItemLine *phaseVector = nullptr;
+    QCPItemText *angleText = nullptr;
 
     /* METHODS */
 
     /* methods for drawing different charts */
     void drawRI();
     void drawFFTSpectrum();
-    void drawSTFT();
     void drawIQPlane();
-    void drawPhase();
-    void drawACF();
-    void drawWrappedPhase();
+    void drawMeandr();
 
     /* helpers */
     void clearPlot();
