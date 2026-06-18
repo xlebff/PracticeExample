@@ -32,7 +32,7 @@ void SignalParams::recalcN()
 
 void SignalParams::recalcSamples()
 {
-    samplesPerSymbol = (1 / (double)50) / (1 / (double)fd);
+    samplesPerSymbol = (1 / (double)rate) / (1 / (double)fd);
     qDebug() << samplesPerSymbol << "samples per symbol" << endl;
 }
 
