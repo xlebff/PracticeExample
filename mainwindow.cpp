@@ -119,9 +119,9 @@ void MainWindow::drawFFTSpectrum()
     /* if memory allocation failed */
     if (!in_fftw || !out_fftw) {
         QMessageBox::critical(this, "Error", "Error during memory allocation");
-        qDebug() << "Error during memory allocation: " << Qt::endl <<
-            "In FFTW: " << in_fftw << ";" << Qt::endl <<
-            "Out FFTW: " << out_fftw << Qt::endl;
+        qDebug() << "Error during memory allocation: " << endl <<
+            "In FFTW: " << in_fftw << ";" << endl <<
+            "Out FFTW: " << out_fftw << endl;
         return;
     }
 
@@ -410,7 +410,7 @@ void MainWindow::writeFile()
     FILE* f = fopen(fileName, "w+b");
     if (!f) {
         QMessageBox::critical(this, "Error", "Error during opening result file");
-        qDebug() << "Error during opening " << fileName << Qt::endl;
+        qDebug() << "Error during opening " << fileName << endl;
         return;
     }
 
@@ -421,7 +421,7 @@ void MainWindow::writeFile()
         size_t written = fwrite(result, sizeof(short), 2, f);
         if (written != 2) {
             QMessageBox::warning(this, "Warning", "Error during writting in phase mode");
-            qDebug() << "Error during writting in phase mode" << Qt::endl;
+            qDebug() << "Error during writting in phase mode" << endl;
         }
     }
 

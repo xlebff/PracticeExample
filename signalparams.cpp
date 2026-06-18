@@ -10,7 +10,7 @@ void SignalParams::loadFromSettings(const QString &path)
     QSettings sett(path, QSettings::IniFormat);
 
     qDebug() << "Looking for file:" << sett.fileName();
-    qDebug() << "File exists:" << QFile::exists(path) << Qt::endl;
+    qDebug() << "File exists:" << QFile::exists(path) << endl;
 
     sett.beginGroup(PARAMS);
     A = sett.value("A", A_DEFAULT).toInt();
@@ -33,7 +33,7 @@ void SignalParams::recalcN()
 void SignalParams::recalcSamples()
 {
     samplesPerSymbol = (1 / (double)50) / (1 / (double)fd);
-    qDebug() << samplesPerSymbol << "samples per symbol" << Qt::endl;
+    qDebug() << samplesPerSymbol << "samples per symbol" << endl;
 }
 
 void SignalParams::sanitize(QWidget *window)
@@ -43,7 +43,7 @@ void SignalParams::sanitize(QWidget *window)
 
     if (N <= 0) {
         QMessageBox::critical(window, "Error", "Quantity of point is negative!");
-        qDebug() << "Error during calculating N!" << Qt::endl;
+        qDebug() << "Error during calculating N!" << endl;
     }
 }
 
