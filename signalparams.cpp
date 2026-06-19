@@ -21,6 +21,8 @@ void SignalParams::loadFromSettings(const QString &path)
     df = sett.value("df", DF_DEFAULT).toInt();
     rate = sett.value("rate", RATE_DEFAULT).toInt();
     bitGenerateMode = sett.value("mode", GENERATING_MODE_DEFAULT).toInt();
+    double psiDeg = sett.value("psi", PSI_DEFAULT_DEG).toDouble();
+    psi = psiDeg * PI / 180.0;   /* to radians */
     sett.endGroup();
 }
 
@@ -87,6 +89,8 @@ QVector<QVector<double>> SignalParams::generateFSKSignal(QVector<short> &infBit)
         double re = A * cos(arg * freq * (i + n1));
         double im = A * sin(arg * freq * (i + n1));
 
+        // signal[0][i] = re * cos(psi) - im * sin(psi);
+        // signal[1][i] = re * sin(psi) - im * cos(psi);
         signal[0][i] = re;
         signal[1][i] = im;
     }
@@ -115,8 +119,8 @@ QVector<QVector<double>> SignalParams::generatePhaseSignal(QVector<short> &infBi
         double re = A * cos(PHASES[inf_bit[i] % PHASES_COUNT]);
         double im = A * sin(PHASES[inf_bit[i] % PHASES_COUNT]);
 
-        signal[0][i] = re;
-        signal[1][i] = im;
+        signal[0][i] = re * cos(psi) - im * sin(psi);
+        signal[1][i] = re * sin(psi) + im * cos(psi);
     }
 
     infBit = inf_bit;

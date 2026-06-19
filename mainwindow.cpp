@@ -218,23 +218,19 @@ void MainWindow::drawIQPlane()
 
     m_plot->graph(0)->rescaleAxes();
 
-    phaseVector = new QCPItemLine(m_plot);
-    phaseVector->setProperty("tempItem", true);
-    phaseVector->start->setCoords(0, 0);
-    phaseVector->end->setCoords(firstI, firstQ);
-    phaseVector->setHead(QCPLineEnding::esSpikeArrow);
-    phaseVector->setPen(QPen(Qt::red, 2));
+    phaseVector->end->setCoords(firstI, firstQ);    
+    phaseVector->setVisible(true);
 
     double angleRad = std::atan2(firstQ, firstI);
     double angleDeg = angleRad * 180.0 / PI;
 
-    angleText = new QCPItemText(m_plot);
-    angleText->setProperty("tempItem", true);
-    angleText->position->setCoords(0, 0);
-    angleText->position->setCoords(firstI * 0.7, firstQ * 0.7);
+    double angleTextX = firstI / 10;
+    double angleTextY = firstQ / 10;
+    qDebug() << angleRad << angleDeg << firstI << firstQ;
+
+    angleText->position->setCoords(angleTextX, angleTextY);
     angleText->setText(QString("%1°").arg(angleDeg, 0, 'f', 1));
-    angleText->setColor(Qt::red);
-    angleText->setFont(QFont(font().family(), 11, QFont::Bold));
+    angleText->setVisible(true);
 
     m_plot->xAxis->setLabel("I (синфазная)");
     m_plot->yAxis->setLabel("Q (квадратурная)");
@@ -246,67 +242,6 @@ void MainWindow::drawIQPlane()
 
 void MainWindow::drawMeandr()
 {
-    /* const int N = params.N;
-    const int fd = params.fd;
-
-    QVector<double> time(N), phase(N);
-
-    for (int i = 0; i < N; ++i) {
-        time[i] = (double)i / (double)fd;
-    }
-
-    for (int i = 0; i < N; ++i) {
-        double I = signal[0][i];
-        double Q = signal[1][i];
-        phase[i] = std::atan2(Q, I);
-    }
-
-    QVector<double> X(N), Y(N);
-    for (int i = 0; i < N; ++i) {
-        Y[i] = (i < infBit.size()) ? infBit[i] : 0;
-        X[i] = i;
-    }
-
-    clearPlot();
-
-    minMax(minX, maxX, time, N);
-    minMax(minY, maxY, phase, N);
-
-    double infoMinY = 0, infoMaxY = 1;
-    if (infBit.size() > 0) {
-        infoMinY = infBit[0];
-        infoMaxY = infBit[0];
-        for (int i = 1; i < infBit.size(); ++i) {
-            infoMinY = infBit[i] < infoMinY ? infBit[i] : infoMinY;
-            infoMaxY = infBit[i] > infoMaxY ? infBit[i] : infoMaxY;
-        }
-    }
-    infoMinY /= MARGIN;
-    infoMaxY *= MARGIN;
-
-    if (infoMinY < minY) minY = infoMinY;
-    if (infoMaxY > maxY) maxY = infoMaxY;
-
-    m_plot->addGraph();
-    m_plot->graph(0)->setData(time, phase);
-    m_plot->graph(0)->setPen(QPen(Qt::red));
-    m_plot->graph(0)->setName("Phase");
-
-    m_plot->addGraph();
-    m_plot->graph(1)->setData(X, Y);
-    m_plot->graph(1)->setPen(QPen(Qt::green));
-    m_plot->graph(1)->setName("Info bits");
-
-    m_plot->xAxis->setLabel("Time (s)");
-    m_plot->yAxis->setLabel("Phase (rad) / Bits");
-
-    m_plot->xAxis->setRange(minX, maxX);
-    m_plot->yAxis->setRange(minY, maxY);
-
-    m_plot->legend->setVisible(true);
-
-    m_plot->replot(); */
-
     const int N = params.N;
 
     QVector<double> X(N), Y(N);
@@ -379,10 +314,8 @@ void MainWindow::clearPlot()
         }
     }
 
-    if (angleText || phaseVector) {
-        angleText->setVisible(false);
-        phaseVector->setVisible(false);
-    }
+    angleText->setVisible(false);
+    phaseVector->setVisible(false);
 }
 
 void MainWindow::writeFile()

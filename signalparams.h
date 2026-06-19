@@ -18,6 +18,8 @@ private:
 
     static constexpr int GENERATING_MODE_DEFAULT = 0;
 
+    static constexpr double PSI_DEFAULT_DEG = 0.0;
+
     static inline const QString PATH = "params.ini";
     static inline const QString PARAMS = "Params";
     static inline const double PI = acos(-1.0);
@@ -40,6 +42,7 @@ public:
     int df = DF_DEFAULT;
     int rate = RATE_DEFAULT;
     int bitGenerateMode = GENERATING_MODE_DEFAULT;
+    double psi = PSI_DEFAULT_DEG;
     int N = 0;
     double samplesPerSymbol = 0.0;
 

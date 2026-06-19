@@ -40,6 +40,20 @@ void MainWindow::initLinesAndText()
     /* invisible by default */
     m_startText->setText("");
     m_deltaText->setText("");
+
+    /* angle feaches */
+    angleText = new QCPItemText(m_plot);
+    m_plot->addItem(angleText);
+    angleText->setText("");
+    angleText->setColor(Qt::black);
+    angleText->setFont(QFont(font().family(), 11));
+    angleText->setVisible(false);
+
+    phaseVector = new QCPItemLine(m_plot);
+    phaseVector->start->setCoords(0, 0);
+    phaseVector->setHead(QCPLineEnding::esSpikeArrow);
+    phaseVector->setPen(QPen(Qt::red, 2));
+    phaseVector->setVisible(false);
 }
 
 void MainWindow::onMousePress(QMouseEvent *event)

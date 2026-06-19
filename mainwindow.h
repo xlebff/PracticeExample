@@ -107,7 +107,7 @@ private:
     static constexpr double MARGIN = 1.01;
 
     QCPItemLine *phaseVector = nullptr;
-    QCPItemText *angleText = nullptr;
+    QCPItemText *angleText;
 
     /* METHODS */
 
